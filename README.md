@@ -33,7 +33,7 @@ The **AWC Dashboard** is a web-based registration and management system, likely 
 
 1. Clone the repository or download the project files.
 2. Configure your server (Apache, Nginx) to serve PHP files.
-3. Import the database (crud_db.sql).
+3. Import the database (`crud_db.sql`).
 4. Update `db_connection.php` with your local database credentials.
 5. Open `index.php` in the browser to start using the dashboard.
 
