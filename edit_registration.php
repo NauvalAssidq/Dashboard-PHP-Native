@@ -1,13 +1,58 @@
 <?php
 include('auth.php');
 include('db_connection.php');
+
+if (!isset($_GET['id'])) {
+    header("Location: dashboard.php");
+    exit();
+}
+
+$id = intval($_GET['id']);
+
+$result = mysqli_query($conn, "SELECT * FROM registrar WHERE id = $id");
+$row = mysqli_fetch_assoc($result);
+
+if (!$row) {
+    header("Location: dashboard.php?error=Record not found");
+    exit();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = mysqli_real_escape_string($conn, $_POST['name']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $address = mysqli_real_escape_string($conn, $_POST['address']);
+
+    $check = mysqli_query($conn, "SELECT * FROM registrar 
+                WHERE (email = '$email' OR phone = '$phone') AND id != $id");
+    
+    if (mysqli_num_rows($check) > 0) {
+        header("Location: edit_registration.php?id=$id&error=Email or phone already exists");
+        exit();
+    }
+
+    $update = mysqli_query($conn, "UPDATE registrar SET
+                name = '$name',
+                email = '$email',
+                phone = '$phone',
+                address = '$address'
+                WHERE id = $id");
+
+    if ($update) {
+        header("Location: dashboard.php?success=Registration updated successfully");
+    } else {
+        header("Location: edit_registration.php?id=$id&error=Update failed");
+    }
+    exit();
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration - Arm Wrestling Championship</title>
+    <title>Edit Registration - AWC'24</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -16,7 +61,7 @@ include('db_connection.php');
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
-        <header class="mb-16">
+    <header class="mb-16">
             <nav class="flex justify-between items-center mb-12">
                 <div class="text-xl font-bold text-gray-800">AWC'24</div>
                 
@@ -52,19 +97,19 @@ include('db_connection.php');
             </nav>
         </header>
 
-        <main class="bg-white rounded-2xl border border-gray-200 p-8 md:p-12">
-            <div class="text-center mb-10">
-                <h2 class="text-4xl font-bold text-gray-900 mb-3">Championship Registration</h2>
-                <p class="text-gray-600 text-lg">Join the ultimate test of strength and skill</p>
+        <main class="bg-white rounded-2xl p-8 md:p-12 border border-gray-200">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900">Edit Registration</h2>
+                <a href="dashboard.php" class="text-gray-600 hover:text-gray-900">← Back to Dashboard</a>
             </div>
 
-            <?php if(isset($_GET['status'])): ?>
-            <div class="mb-8 p-4 rounded-lg <?= $_GET['status'] === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' ?>">
-                <?= $_GET['message'] ?? '' ?>
-            </div>
+            <?php if(isset($_GET['error'])): ?>
+                <div class="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">
+                    <?= htmlspecialchars($_GET['error']) ?>
+                </div>
             <?php endif; ?>
 
-            <form action="submit_registration.php" method="POST" class="space-y-8">
+            <form method="POST" class="space-y-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-3">Full Name</label>
                     <input 
@@ -72,31 +117,28 @@ include('db_connection.php');
                         name="name" 
                         required
                         class="w-full px-5 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-transparent placeholder-gray-400"
-                        placeholder="John Doe"
-                        value="<?= $_POST['name'] ?? '' ?>">
+                        value="<?= htmlspecialchars($row['name']) ?>">
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-3">Email Address</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Email</label>
                         <input 
                             type="email" 
                             name="email" 
                             required
                             class="w-full px-5 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-transparent placeholder-gray-400"
-                            placeholder="john@example.com"
-                            value="<?= $_POST['email'] ?? '' ?>">
+                            value="<?= htmlspecialchars($row['email']) ?>">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-3">Phone Number</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Phone</label>
                         <input 
                             type="tel" 
                             name="phone" 
                             required
                             class="w-full px-5 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-transparent placeholder-gray-400"
-                            placeholder="0812-3456-7890"
-                            value="<?= $_POST['phone'] ?? '' ?>">
+                            value="<?= htmlspecialchars($row['phone']) ?>">
                     </div>
                 </div>
 
@@ -106,14 +148,13 @@ include('db_connection.php');
                         name="address" 
                         required
                         rows="4"
-                        class="w-full px-5 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-transparent placeholder-gray-400"
-                        placeholder="Enter your full address"><?= $_POST['address'] ?? '' ?></textarea>
+                        class="w-full px-5 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-transparent placeholder-gray-400"><?= htmlspecialchars($row['address']) ?></textarea>
                 </div>
 
                 <button 
                     type="submit" 
                     class="w-full bg-black hover:bg-gray-800 text-white font-medium py-4 px-8 rounded-xl transition-colors duration-200">
-                    Submit Registration
+                    Update Registration
                 </button>
             </form>
         </main>

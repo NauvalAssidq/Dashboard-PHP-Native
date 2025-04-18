@@ -1,83 +1,77 @@
 <?php
-session_start();
-
-// Check if dark mode is enabled and set session variable
-if (!isset($_SESSION['dark_mode'])) {
-    $_SESSION['dark_mode'] = 'false'; // default to light mode
-}
-
-if (isset($_GET['toggle_dark_mode'])) {
-    $_SESSION['dark_mode'] = ($_SESSION['dark_mode'] == 'true') ? 'false' : 'true';
-    header('Location: ' . $_SERVER['PHP_SELF']);
-    exit;
-}
-
-$darkModeClass = $_SESSION['dark_mode'] == 'true' ? 'dark' : 'light';
+include('auth.php');
+include('db_connection.php');
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="assets/style.css">
-  <title>ArmWrestler</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arm Wrestling Championship</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
+<body class="bg-gray-50 h-screen">    
+    <div class="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
+        <header class="mb-16">
+            <nav class="flex justify-between items-center mb-12">
+                <div class="text-xl font-bold text-gray-800">AWC'24</div>
+                
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="index.php" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="about.php" class="text-gray-600 hover:text-gray-900">About</a>
+                    <a href="schedule.php" class="text-gray-600 hover:text-gray-900">Schedule</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Contact</a>
+                    
+                    <?php if(isset($_SESSION['id'])): ?>
+                        <a href="dashboard.php" class="text-gray-600 hover:text-gray-900">
+                            Dashboard
+                        </a>
+                        <a href="logout.php" class="bg-white border border-red-400 text-red-700 px-4 py-2 rounded-lg hover:bg-red-700 hover:text-white transition-colors">
+                            Logout
+                        </a>
+                    <?php else: ?>
+                        <a href="login.php" class="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+                            Login
+                        </a>
+                    <?php endif; ?>
+                </div>
 
-<body class="<?= $darkModeClass ?>">
-
-  <!-- Header -->
-  <header class="header <?= $darkModeClass ?>">
-    <div class="logo">
-      <h1>ArmWrestler</h1>
+                <div class="md:hidden flex items-center space-x-4">
+                    <?php if(isset($_SESSION['id'])): ?>
+                        <a href="dashboard.php" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                        <a href="logout.php" class="text-red-600 hover:text-red-700">Logout</a>
+                    <?php else: ?>
+                        <a href="login.php" class="text-gray-600 hover:text-gray-900">Login</a>
+                    <?php endif; ?>
+                    <button class="text-gray-600">Menu</button>
+                </div>
+            </nav>
+        </header>
+        
+        <main class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">National Arm Wrestling Championship</h1>
+                <p class="text-xl text-gray-600 mb-8">December 15, 2024 • Blang Padang, Banda Aceh</p>
+                <a href="register.php" class="inline-block bg-black text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-colors">Register Now</a>
+            </div>
+            <div class="relative">
+                <div class="aspect-w-4 aspect-h-3 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden">
+                    <img src="armwestler.png" alt="Arm wrestling competition" class="mix-blend-overlay opacity-50 object-cover w-full h-full">
+                </div>
+                <div class="absolute -bottom-6 -right-6 bg-white rounded-xl p-4 border border-gray-200">
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500">COUNTDOWN</div>
+                        <div class="text-xl font-bold">241 Days</div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-
-    <button class="nav-toggle-button" onclick="document.querySelector('.nav-container').classList.toggle('open')">
-      <span class="burger-icon <?= $darkModeClass ?>">&#9776;</span> <!-- Burger icon character -->
-    </button>
-
-    <div class="nav-container">
-      <nav class="nav <?= $darkModeClass ?>">
-        <a href="home.php" class="nav-link">Home</a>
-        <a href="details.php" class="nav-link">Details</a>
-        <a href="register.php" class="nav-link">Register</a>
-        <a href="login.html" class="nav-link">Login</a>
-        <a href="?toggle_dark_mode=true" class="toggle-button">
-          <?= $_SESSION['dark_mode'] == 'true' ? '🌙' : '☀️' ?>
-        </a>
-      </nav>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <main class="main-content">
-    <section class="hero <?= $darkModeClass ?>">
-      <h2>Welcome to Our Arm Wrestling Sport Event</h2>
-      <p>Be Healthy, Stay Positive, Strong Arm, Strong Mind.</p>
-      <button class="cta-button">Get Started</button>
-    </section>
-
-    <section class="hero <?= $darkModeClass ?>">
-      <h2>Welcome to Our Arm Wrestling Sport Event</h2>
-      <p>
-      Arm wrestling is a competitive sport that tests strength, technique, and endurance, pitting two opponents against each other in a contest of raw power. The goal is simple: force your opponent's hand and wrist to touch the surface, usually a table, with the arm locked in a specific position. While it may appear to be just about brute strength, arm wrestling also involves leverage, body mechanics, and strategy. Proper technique can often overcome pure muscle power, as skilled athletes know how to use their body to generate force and position their opponent for weakness. The sport is popular in many countries, with both professional competitions and casual matches held in various settings, from local bars to global tournaments. Arm wrestling has a unique appeal, blending athleticism with a personal challenge, where each match feels like a test of will and determination.
-      </p>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="footer <?= $darkModeClass ?>">
-    <p>&copy; 2024 ArmWrestler. All Rights Reserved.</p>
-  </footer>
-
-  <script>
-    // JavaScript to handle responsive navigation toggle
-    document.querySelector('.nav-toggle-button').addEventListener('click', function () {
-      document.querySelector('.nav-container').classList.toggle('open');
-    });
-  </script>
-
 </body>
-
 </html>

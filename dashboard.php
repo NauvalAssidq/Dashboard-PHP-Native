@@ -1,111 +1,95 @@
-<?php
-session_start();
+<?php 
+include('auth.php');
+include('db_connection.php');
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="assets/dashboard.css">
-    <title>CRUD System</title>
+    <title>Admin Dashboard - Arm Wrestling Championship</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h2>Daftar Pengguna</h2>
-        <form method="GET" action="" class="search-form">
-            <input type="text" name="search" placeholder="Cari pengguna..." value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
-            <button type="submit">Cari</button>
-            <button>
-                <a href="index.php" class="btn-reset">Reset</a>
-            </button>
-            <button>
-                <!-- Logout Button -->
-                <a href="authentication/logout.php" class="btn-logout">Logout</a>
-            </button>
-        </form>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nama</th>
-                        <th>Email</th>
-                        <th>Telepon</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php
-                    // Database connection
-                    $conn = new mysqli("localhost", "root", "", "crud_db");
-                    if ($conn->connect_error) {
-                        die("Koneksi gagal: " . $conn->connect_error);
-                    }
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
+        <header class="mb-16">
+            <nav class="flex justify-between items-center mb-12">
+                <div class="text-xl font-bold text-gray-800">AWC'24</div>
+                
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="index.php" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="about.php" class="text-gray-600 hover:text-gray-900">About</a>
+                    <a href="schedule.php" class="text-gray-600 hover:text-gray-900">Schedule</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Contact</a>
+                    
+                    <?php if(isset($_SESSION['id'])): ?>
+                        <a href="logout.php" class="bg-white border border-red-400 text-red-700 px-4 py-2 rounded-lg hover:bg-red-700 hover:text-white transition-colors">
+                            Logout
+                        </a>
+                    <?php else: ?>
+                        <a href="login.php" class="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+                            Login
+                        </a>
+                    <?php endif; ?>
+                </div>
 
-                    // Pagination logic
-                    $limit = 5;
-                    $search = isset($_GET['search']) ? $_GET['search'] : '';
-                    $sql_count = "SELECT COUNT(*) FROM pendaftar WHERE name LIKE '%$search%' OR email LIKE '%$search%' OR phone LIKE '%$search%'";
-                    $result_count = $conn->query($sql_count);
-                    $total_records = $result_count->fetch_row()[0];
-                    $total_pages = ceil($total_records / $limit);
+                <div class="md:hidden flex items-center space-x-4">
+                    <?php if(isset($_SESSION['id'])): ?>
+                        <a href="logout.php" class="bg-white border border-red-400 text-red-700 px-4 py-2 rounded-lg hover:bg-red-700 hover:text-white transition-colors">
+                        Logout</a>
+                    <?php else: ?>
+                        <a href="login.php" class="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+                        Login</a>
+                    <?php endif; ?>
+                    <button class="text-gray-600">Menu</button>
+                </div>
+            </nav>
+        </header>
 
-                    $page = isset($_GET['page']) ? $_GET['page'] : 1;
-                    $start_from = ($page - 1) * $limit;
-
-                    $sql = "SELECT * FROM pendaftar WHERE name LIKE '%$search%' OR email LIKE '%$search%' OR phone LIKE '%$search%' LIMIT $start_from, $limit";
-                    $result = $conn->query($sql);
-
-                    if ($result->num_rows > 0) {
-                        while($row = $result->fetch_assoc()) {
-                            echo "<tr>
-                                    <td>" . $row["id"] . "</td>
-                                    <td>" . $row["name"] . "</td>
-                                    <td>" . $row["email"] . "</td>
-                                    <td>" . $row["phone"] . "</td>
-                                    <td>
-                                        <a href='update.php?id=" . $row["id"] . "' class='btn-edit'>Edit</a>
-                                        <a href='delete.php?id=" . $row["id"] . "' class='btn-delete'>Hapus</a>
-                                    </td>
-                                </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='5'>Tidak ada data</td></tr>";
-                    }
-
-                    $conn->close();
-                ?>
-                </tbody>
-            </table>
-        </div>
-        <a href="create.php" class="btn">Tambah Pengguna Baru</a>
-        <!-- Pagination -->
-        <div class="pagination">
-            <?php if($page > 1): ?>
-                <a href="?page=1&search=<?php echo urlencode($search); ?>" class="page-link">&#171;</a>
-            <?php endif; ?>
-
-            <?php if($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link prev">&#8592;</a>
-            <?php endif; ?>
+        <main class="bg-white rounded-2xl p-8 md:p-12 border border-gray-200">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900">Registration Dashboard</h2>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">Welcome, Admin</span>
+                </div>
+            </div>
 
             <?php
-                $start_page = max(1, $page - 2);
-                $end_page = min($total_pages, $page + 2);
-                for ($i = $start_page; $i <= $end_page; $i++) {
-                    echo "<a href='?page=$i&search=" . urlencode($search) . "' class='page-link " . ($i == $page ? 'active' : '') . "'>$i</a>";
-                }
+            $result = mysqli_query($conn, "SELECT * FROM registrar");
+            echo '<div class="overflow-x-auto rounded-xl border border-gray-200">';
+            echo '<table class="min-w-full divide-y divide-gray-200">';
+            echo '<thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registered At</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>';
+            echo '<tbody class="bg-white divide-y divide-gray-200">';
+            while ($row = mysqli_fetch_assoc($result)) {
+                echo "<tr>
+                        <td class='px-6 py-4 whitespace-nowrap'>{$row['name']}</td>
+                        <td class='px-6 py-4 whitespace-nowrap'>{$row['email']}</td>
+                        <td class='px-6 py-4 whitespace-nowrap'>{$row['phone']}</td>
+                        <td class='px-6 py-4 whitespace-nowrap'>{$row['created_at']}</td>
+                        <td class='px-6 py-4 whitespace-nowrap space-x-2'>
+                            <a href='edit_registration.php?id={$row['id']}' class='inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50'>Edit</a>
+                            <form method='POST' action='delete_registration.php' class='inline'>
+                                <input type='hidden' name='id' value='{$row['id']}'>
+                                <button type='submit' class='inline-flex items-center px-3 py-1.5 border border-red-600 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50' onclick='return confirm(\"Are you sure?\")'>Delete</button>
+                            </form>
+                        </td>
+                      </tr>";
+            }
+            echo '</tbody></table></div>';
             ?>
-
-            <?php if($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link next">&#8594;</a>
-            <?php endif; ?>
-
-            <?php if($page < $total_pages): ?>
-                <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&#187;</a>
-            <?php endif; ?>
-        </div>
+        </main>
     </div>
 </body>
 </html>
